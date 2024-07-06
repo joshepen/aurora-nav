@@ -15,18 +15,6 @@ class AuroraNav:
             "https://aurora.umanitoba.ca/ssb/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu"
         )
 
-        self.OpenAurora()
-        self.Login(os.getenv("AURORA_USER"), os.getenv("AURORA_PASS"))
-
-        self.GoToPage("Enrolment & Academic Records")
-        self.GoToPage("Registration and Exams")
-        self.GoToPage("Look Up Classes")
-
-        self.SelectTerm("Fall 2024")
-        self.SelectDepartment("MATH")
-        print(self.GetPageContents())
-        input()
-
     def OpenAurora(self):
         self.driver.get(self.auroraHomeLink)
 
@@ -46,8 +34,22 @@ class AuroraNav:
             )
         )
 
+    """ Finds name and clicks it."""
+
     def GoToPage(self, name: str):
         self.driver.find_element(By.XPATH, "//*[contains(text(), '%s')]" % name).click()
+
+    """ The Look Up Classes page is unique in that the words you search for are not a button,
+        but rather the button is beside it, so GoToPage can't be used."""
+
+    def GoToLookupClass(self, courseNum: str):
+        self.driver.find_element(
+            By.XPATH,
+            "//*[contains(text(), '%s')]/../td[last()]/form/input[@type='submit']"
+            % courseNum,
+        ).click()
+
+    """ Returns to Aurora home page."""
 
     def HomePage(self):
         self.driver.get(self.auroraHomeLink)
@@ -55,14 +57,7 @@ class AuroraNav:
     def GetPageContents(self):
         return self.driver.page_source
 
-    def NewAuroraTab(self) -> int:
-        numTabs = len(self.driver.window_handles)
-        self.driver.execute_script("""window.open("url","_blank");""")
-        self.driver.switch_to.window(self.driver.window_handles[numTabs])
-        self.driver.get(self.auroraHomeLink)
-
-    def SelectTab(self, tabNum: int):
-        self.driver.switch_to.window(self.driver.window_handles[tabNum])
+    """ Select term from dropdown list and clicks submit."""
 
     def SelectTerm(self, term):
         courseList = Select(self.driver.find_element(By.TAG_NAME, "select"))
@@ -70,11 +65,13 @@ class AuroraNav:
 
         self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
 
+    """ Select department from dropdown list and clicks submit."""
+
     def SelectDepartment(self, departmentName):
         courseList = Select(self.driver.find_element(By.TAG_NAME, "select"))
         courseList.select_by_value(departmentName)
 
         self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
 
-
-AuroraNav()
+    def CloseWindow(self):
+        self.driver.close()
