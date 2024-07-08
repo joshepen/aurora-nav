@@ -4,13 +4,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 import os
 import time
 
 
 class AuroraNav:
-    def __init__(self):
-        self.driver = webdriver.Chrome()
+    def __init__(self, headless=True):
+        options = Options()
+        if headless:
+            options.add_argument("--headless=new")
+        options.add_argument("window-size=1400,900")
+        self.driver = webdriver.Chrome(options=options)
         self.auroraHomeLink = (
             "https://aurora.umanitoba.ca/ssb/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu"
         )
@@ -37,17 +43,36 @@ class AuroraNav:
     """ Finds name and clicks it."""
 
     def GoToPage(self, name: str):
-        self.driver.find_element(By.XPATH, "//*[contains(text(), '%s')]" % name).click()
+        try:
+            self.driver.find_element(
+                By.XPATH, "//*[contains(text(), '%s')]" % name
+            ).click()
+            return True
+        except NoSuchElementException as nse:
+            return False
 
     """ The Look Up Classes page is unique in that the words you search for are not a button,
         but rather the button is beside it, so GoToPage can't be used."""
 
     def GoToLookupClass(self, courseNum: str):
-        self.driver.find_element(
-            By.XPATH,
-            "//*[contains(text(), '%s')]/../td[last()]/form/input[@type='submit']"
-            % courseNum,
-        ).click()
+        try:
+            self.driver.find_element(
+                By.XPATH,
+                "//*[contains(text(), '%s')]/../td[last()]/form/input[@type='submit']"
+                % courseNum,
+            ).click()
+        except NoSuchElementException as nse:
+            return False
+
+        try:
+            self.driver.find_element(
+                By.XPATH,
+                "//*[contains(text(), '%s')]"
+                % "No classes were found that meet your search criteria",
+            )
+            return False
+        except NoSuchElementException as nse:
+            return True
 
     """ Returns to Aurora home page."""
 
