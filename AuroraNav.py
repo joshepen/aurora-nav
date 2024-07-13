@@ -6,8 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
-import os
-import time
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 class AuroraNav:
@@ -42,14 +41,20 @@ class AuroraNav:
 
     """ Finds name and clicks it."""
 
-    def GoToPage(self, name: str):
+    def GoToPage(self, name: str, elementType="*"):
+        startUrl = self.driver.current_url
         try:
-            self.driver.find_element(
-                By.XPATH, "//*[contains(text(), '%s')]" % name
-            ).click()
-            return True
+            element = self.driver.find_element(
+                By.XPATH, "//%s[contains(text(), '%s')]" % (elementType, name)
+            )
+
         except NoSuchElementException as nse:
             return False
+
+        element.click()
+        if self.driver.current_url == startUrl:
+            return False
+        return True
 
     """ The Look Up Classes page is unique in that the words you search for are not a button,
         but rather the button is beside it, so GoToPage can't be used."""
